@@ -53,10 +53,16 @@ button{font:inherit;color:inherit;border:none;background:none;padding:0;cursor:p
 .wk div{text-align:center;font-size:12px;padding:6px 0;color:var(--sub);font-weight:600}
 .wk div.sat{color:var(--sat)} .wk div.sun{color:var(--sun)}
 .multi .wk div{color:var(--accent);text-decoration:underline}
-.grid{display:grid;grid-template-columns:repeat(7,1fr)}
-.cell{min-height:64px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+.week{position:relative;display:grid;grid-template-columns:repeat(7,1fr)}
+.cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line);
   padding:3px 2px;position:relative;overflow:hidden}
-.cell:nth-child(7n){border-right:none}
+.cell:nth-child(7){border-right:none}
+.bars{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
+.bev{position:absolute;height:13px;font-size:9.5px;line-height:13px;border-radius:3px;padding:0 2px;
+  white-space:nowrap;overflow:hidden;color:#fff}
+.bev.cl{border-top-left-radius:0;border-bottom-left-radius:0}
+.bev.cr{border-top-right-radius:0;border-bottom-right-radius:0}
+.cell .more{position:absolute;bottom:1px;left:0;right:0}
 .cell .d{font-size:13px;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;margin:0 auto 2px;font-weight:500}
 .cell.out{opacity:.35}
 .cell.sat .d{color:var(--sat)} .cell.sun .d, .cell.hol .d{color:var(--sun)}
@@ -64,7 +70,6 @@ button{font:inherit;color:inherit;border:none;background:none;padding:0;cursor:p
 .cell.sel{background:var(--accent-soft)}
 .cell.msel{background:var(--accent-soft)}
 .cell.msel::after{content:"✓";position:absolute;top:2px;right:3px;font-size:11px;color:var(--accent);font-weight:700}
-.ev{font-size:9.5px;line-height:13px;border-radius:3px;padding:0 2px;margin-top:1px;white-space:nowrap;overflow:hidden;color:#fff}
 .more{font-size:9px;color:var(--sub);text-align:center}
 .hname{font-size:8px;color:var(--sun);text-align:center;white-space:nowrap;overflow:hidden;margin-top:-2px}
 
@@ -76,7 +81,8 @@ button{font:inherit;color:inherit;border:none;background:none;padding:0;cursor:p
 .item{display:flex;gap:10px;padding:12px;border-bottom:1px solid var(--line);align-items:center}
 .item:last-child{border-bottom:none}
 .item .bar{width:5px;align-self:stretch;border-radius:3px}
-.item .tm{font-size:13px;color:var(--sub);width:96px;white-space:nowrap;flex-shrink:0;font-variant-numeric:tabular-nums}
+.item .tm{font-size:13px;color:var(--sub);width:96px;white-space:nowrap;flex-shrink:0;font-variant-numeric:tabular-nums;line-height:1.35}
+.item .tm.multi{font-size:12px}
 .item .tt{font-size:15px;flex:1;word-break:break-all}
 .item .tt small{display:block;color:var(--sub);font-size:12px;margin-top:2px;white-space:pre-wrap}
 .empty{padding:18px;text-align:center;color:var(--sub);font-size:14px}
@@ -123,8 +129,20 @@ textarea.txt{height:56px;resize:none}
 .tbox small{display:block;font-size:11px;color:var(--sub)}
 .tbox span{font-size:26px;font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:1px}
 .tbox span.ph{color:var(--sub);font-weight:400}
-.allday{font-size:13px;display:flex;align-items:center;gap:4px;padding:4px}
-.allday input{width:20px;height:20px}
+.allday{font-size:14px;display:flex;align-items:center;gap:8px;padding:2px 4px;color:var(--text)}
+.sw{position:relative;width:51px;height:31px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:var(--line);border-radius:31px;transition:background .2s}
+.sw span::before{content:"";position:absolute;width:27px;height:27px;left:2px;top:2px;background:#fff;border-radius:50%;
+  box-shadow:0 2px 4px rgba(0,0,0,.25);transition:transform .2s}
+.sw input:checked + span{background:#34c759}
+.sw input:checked + span::before{transform:translateX(20px)}
+.off{opacity:.3;pointer-events:none}
+.drow{display:flex;gap:8px;align-items:center}
+.drow > div{flex:1;min-width:0}
+.drow small{display:block;font-size:11px;color:var(--sub);margin:0 4px 2px}
+input.date{width:100%;font-size:16px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);
+  background:var(--card);color:var(--text);-webkit-appearance:none;appearance:none;min-height:42px}
 .pad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
 .pad button{height:46px;border-radius:10px;background:var(--key);font-size:22px;box-shadow:0 1px 0 rgba(0,0,0,.2)}
 .pad button:active{background:var(--keyp)}
@@ -187,6 +205,11 @@ textarea.txt{height:56px;resize:none}
       <button class="btn" id="importBtn">バックアップから復元</button>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none">
       <div style="height:20px"></div>
+      <p class="note" style="margin-top:0">他のカレンダーアプリから書き出した .ics ファイルを取り込めます（複数選択可）。同じファイルを2回取り込んでも重複しません。</p>
+      <button class="btn" id="icsBtn">カレンダー(.ics)から取り込む</button>
+      <input type="file" id="icsFile" multiple style="display:none">
+      <div id="icsPanel" style="display:none"></div>
+      <div style="height:20px"></div>
       <button class="btn danger" id="wipeBtn">すべてのデータを削除</button>
       <p class="note" id="stat"></p>
     </div>
@@ -213,6 +236,14 @@ textarea.txt{height:56px;resize:none}
       <div class="lbl" id="datesLbl">日付</div>
       <div class="dates" id="dates"></div>
     </div>
+    <div id="rowRange">
+      <div class="lbl">日付</div>
+      <div class="drow">
+        <div><small>開始日</small><input type="date" class="date" id="fD1"></div>
+        <div style="flex:0;color:var(--sub);padding-top:14px">〜</div>
+        <div><small>終了日</small><input type="date" class="date" id="fD2"></div>
+      </div>
+    </div>
     <div id="rowTpl">
       <div class="lbl">テンプレートから入力</div>
       <div class="tpls" id="tpls"></div>
@@ -223,9 +254,11 @@ textarea.txt{height:56px;resize:none}
     </div>
     <div class="lbl">内容</div>
     <input class="txt" id="fTitle" placeholder="例：シフト（早番）">
+    <div class="lbl">場所</div>
+    <input class="txt" id="fPlace" placeholder="任意">
     <div class="lbl" style="display:flex;justify-content:space-between;align-items:center">
       <span>時間（テンキーで入力）</span>
-      <label class="allday"><input type="checkbox" id="fAll">終日</label>
+      <label class="allday">終日<span class="sw"><input type="checkbox" id="fAll"><span></span></span></label>
     </div>
     <div class="times" id="timesRow">
       <div class="tbox focus" id="tbS"><small>開始</small><span id="tS"></span></div>
@@ -256,8 +289,39 @@ const KEY = 'schedule-app.v1';
 const COLORS = ['#0a84ff','#34c759','#ff9500','#ff3b30','#af52de','#ff2d55','#5ac8fa','#8e8e93'];
 let db = load();
 function load(){
-  try{ const d = JSON.parse(localStorage.getItem(KEY)); if(d && d.events && d.templates) return d; }catch(e){}
-  return {events:[], templates:[]};
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if(d && d.events && d.templates){ if(migrate(d)){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} } return d; }
+  }catch(e){}
+  return {events:[], templates:[], ver:2};
+}
+// 旧形式（複数日を1日ずつに分割・メモに「場所：」「期間：」）を新形式に変換
+function migrate(d){
+  if(d.ver >= 2) return false;
+  const groups = {};
+  d.events.forEach(e=>{ if(e.src && e.group) (groups[e.group]=groups[e.group]||[]).push(e); });
+  const drop = new Set();
+  Object.values(groups).forEach(parts=>{
+    if(parts.length<2) return;
+    parts.sort((a,b)=>a.date.localeCompare(b.date));
+    const f = parts[0], l = parts[parts.length-1];
+    if(f.start){ f.end = (l.start==='0000') ? l.end : '2400'; }
+    f.endDate = l.date; f.group = '';
+    parts.slice(1).forEach(x=>drop.add(x.id));
+  });
+  d.events = d.events.filter(e=>!drop.has(e.id));
+  d.events.forEach(e=>{
+    if(!e.src || !e.memo) return;
+    const keep = [];
+    e.memo.split('\n').forEach(line=>{
+      if(line.startsWith('期間：')) return;
+      if(line.startsWith('場所：') && !e.place){ e.place = line.slice(3); return; }
+      keep.push(line);
+    });
+    e.memo = keep.join('\n');
+  });
+  d.ver = 2;
+  return true;
 }
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){ alert('保存に失敗しました: '+e.message); }
@@ -310,7 +374,16 @@ let mset = new Set();
 /* ========== カレンダー描画 ========== */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const byDate = () => { const m={}; db.events.forEach(e=>{ (m[e.date]=m[e.date]||[]).push(e); }); return m; };
+const evEnd = e => (e.endDate && e.endDate > e.date) ? e.endDate : e.date;
+const covers = (e,k) => e.date <= k && k <= evEnd(e);
+const addDays = (d,n)=>{ const x=parse(d); x.setDate(x.getDate()+n); return ymd(x); };
+const dayDiff = (a,b)=> Math.round((parse(b)-parse(a))/86400000);
+const shortDate = s => { const d=parse(s); return (d.getMonth()+1)+'/'+d.getDate(); };
+function timeLabel(e){
+  if(evEnd(e)===e.date) return e.start ? fmtTime(e.start)+(e.end?'〜'+fmtTime(e.end):'') : '終日';
+  if(!e.start) return '終日<br>'+shortDate(e.date)+'〜'+shortDate(evEnd(e));
+  return shortDate(e.date)+' '+fmtTime(e.start)+'〜<br>'+shortDate(evEnd(e))+(e.end?' '+fmtTime(e.end):'');
+}
 const sortEv = (a,b) => (a.start||'').localeCompare(b.start||'') || a.title.localeCompare(b.title);
 
 function render(){
@@ -324,24 +397,49 @@ function render(){
   const start = new Date(y,m,1-offset);
   const daysInMonth = new Date(y,m+1,0).getDate();
   const weeks = Math.ceil((offset+daysInMonth)/7);
-  const map = byDate();
+  const vs = ymd(start), ve = addDays(vs, weeks*7-1);
+  const inView = db.events.filter(e=> e.date<=ve && evEnd(e)>=vs);
+  const MAXL = 3, LH = 14;
   let html = '';
-  for(let i=0;i<weeks*7;i++){
-    const d = new Date(start); d.setDate(start.getDate()+i);
-    const k = ymd(d), dow = d.getDay(), hn = holName(k);
-    const cls = ['cell'];
-    if(d.getMonth()!==m) cls.push('out');
-    if(dow===6) cls.push('sat'); if(dow===0) cls.push('sun'); if(hn) cls.push('hol');
-    if(k===today) cls.push('today');
-    if(!multi && k===selected) cls.push('sel');
-    if(multi && mset.has(k)) cls.push('msel');
-    const evs = (map[k]||[]).sort(sortEv);
-    let inner = `<div class="d">${d.getDate()}</div>`;
-    if(hn) inner += `<div class="hname">${esc(hn)}</div>`;
-    const max = hn ? 2 : 3;
-    evs.slice(0,max).forEach(e=>{ inner += `<div class="ev" style="background:${e.color||COLORS[0]}">${esc(e.start? fmtTime(e.start).replace(/^0/,'')+' ':'')}${esc(e.title)}</div>`; });
-    if(evs.length>max) inner += `<div class="more">+${evs.length-max}</div>`;
-    html += `<div class="${cls.join(' ')}" data-k="${k}">${inner}</div>`;
+  for(let w=0; w<weeks; w++){
+    const ws = addDays(vs, w*7), we = addDays(ws, 6);
+    const days = [...Array(7)].map((_,i)=>addDays(ws,i));
+    const hasHol = days.some(k=>holName(k));
+    const top = hasHol ? 39 : 29;
+    // その週にかかる予定を、長いもの→開始が早いもの順にレーンへ配置
+    const segs = inView.filter(e=> e.date<=we && evEnd(e)>=ws).map(e=>{
+      const sc = e.date<ws ? 0 : dayDiff(ws,e.date), ec = evEnd(e)>we ? 6 : dayDiff(ws,evEnd(e));
+      return {e, sc, ec, span:ec-sc+1};
+    }).sort((a,b)=> a.sc-b.sc || b.span-a.span || (a.e.start||'').localeCompare(b.e.start||'') || a.e.title.localeCompare(b.e.title));
+    const lanes = []; const hidden = [0,0,0,0,0,0,0];
+    let bars = '';
+    segs.forEach(sg=>{
+      let L = 0;
+      while(lanes[L] && lanes[L].slice(sg.sc, sg.ec+1).some(Boolean)) L++;
+      if(!lanes[L]) lanes[L] = Array(7).fill(false);
+      for(let c=sg.sc;c<=sg.ec;c++) lanes[L][c]=true;
+      if(L>=MAXL){ for(let c=sg.sc;c<=sg.ec;c++) hidden[c]++; return; }
+      const e = sg.e, col = e.color||COLORS[0];
+      const head = e.date>=ws; // この週に開始日がある
+      const label = (head && e.start ? fmtTime(e.start).replace(/^0/,'')+' ' : '') + e.title;
+      const cls = 'bev' + (e.date<ws?' cl':'') + (evEnd(e)>we?' cr':'');
+      bars += `<div class="${cls}" style="top:${top+L*LH}px;left:calc(${sg.sc}*100%/7 + 2px);width:calc(${sg.span}*100%/7 - 4px);background:${col};color:${fgColor(col)}">${esc(label)}</div>`;
+    });
+    let cells = '';
+    days.forEach((k,i)=>{
+      const d = parse(k), dow = d.getDay(), hn = holName(k);
+      const cls = ['cell'];
+      if(d.getMonth()!==m) cls.push('out');
+      if(dow===6) cls.push('sat'); if(dow===0) cls.push('sun'); if(hn) cls.push('hol');
+      if(k===today) cls.push('today');
+      if(!multi && k===selected) cls.push('sel');
+      if(multi && mset.has(k)) cls.push('msel');
+      let inner = `<div class="d">${d.getDate()}</div>`;
+      if(hn) inner += `<div class="hname">${esc(hn)}</div>`;
+      if(hidden[i]) inner += `<div class="more">+${hidden[i]}</div>`;
+      cells += `<div class="${cls.join(' ')}" data-k="${k}" style="min-height:${top+MAXL*LH+12}px">${inner}</div>`;
+    });
+    html += `<div class="week">${cells}<div class="bars">${bars}</div></div>`;
   }
   $('grid').innerHTML = html;
   $('cal').classList.toggle('multi', multi);
@@ -361,14 +459,14 @@ function renderDay(){
     const cb = $('clearSel'); if(cb) cb.onclick = ()=>{ mset.clear(); render(); };
     return;
   }
-  const evs = db.events.filter(e=>e.date===selected).sort(sortEv);
+  const evs = db.events.filter(e=>covers(e,selected)).sort((a,b)=> (a.date===selected)-(b.date===selected) || sortEv(a,b));
   const hn = holName(selected);
   el.innerHTML = `<h2><span>${parse(selected).getFullYear()}年${fmtDate(selected)}</span><small>${esc(hn)}</small></h2>
     <div class="list">${evs.length ? evs.map(e=>`
       <div class="item" data-id="${e.id}">
         <div class="bar" style="background:${e.color||COLORS[0]}"></div>
-        <div class="tm">${e.start ? fmtTime(e.start)+(e.end?'〜'+fmtTime(e.end):'') : '終日'}</div>
-        <div class="tt">${esc(e.title)}${e.memo?`<small>${esc(e.memo)}</small>`:''}</div>
+        <div class="tm${evEnd(e)!==e.date?' multi':''}">${timeLabel(e)}</div>
+        <div class="tt">${esc(e.title)}${e.place?`<small>場所：${esc(e.place)}</small>`:''}${e.memo?`<small>${esc(e.memo)}</small>`:''}</div>
       </div>`).join('') : '<div class="empty">予定はありません</div>'}</div>`;
   el.querySelectorAll('.item').forEach(it=> it.onclick = ()=> openEditor({mode:'edit', id: it.dataset.id}));
 }
@@ -437,11 +535,14 @@ function openEditor(o){
   if(src && ed.kind==='event') ed.dates = [src.date];
   $('shTitle').textContent = ed.kind==='tpl' ? (ed.mode==='edit'?'テンプレートを編集':'テンプレートを追加')
                                              : (ed.mode==='edit'?'予定を編集':'予定を追加');
-  $('rowDates').style.display = ed.kind==='event' ? '' : 'none';
   $('rowTpl').style.display = ed.kind==='event' && db.templates.length ? '' : 'none';
   $('rowName').style.display = ed.kind==='tpl' ? '' : 'none';
   $('rowSaveTpl').style.display = ed.kind==='event' && ed.mode==='new' ? '' : 'none';
   $('shDelete').style.display = ed.mode==='edit' ? '' : 'none';
+  const range = ed.kind==='event' && ed.dates.length===1;
+  $('rowRange').style.display = range ? '' : 'none';
+  $('rowDates').style.display = ed.kind==='event' && !range ? '' : 'none';
+  if(range){ $('fD1').value = ed.dates[0]; $('fD2').value = src ? evEnd(src) : ed.dates[0]; }
   if(ed.kind==='event'){
     $('datesLbl').textContent = ed.dates.length>1 ? `日付（${ed.dates.length}日にまとめて登録）` : '日付';
     $('dates').innerHTML = ed.dates.map(d=>`<span class="chip">${fmtDate(d)}</span>`).join('');
@@ -450,6 +551,7 @@ function openEditor(o){
   $('fName').value = src && ed.kind==='tpl' ? src.name : '';
   $('fTitle').value = src ? src.title : '';
   $('fMemo').value = src ? (src.memo||'') : '';
+  $('fPlace').value = src ? (src.place||'') : '';
   $('fSaveTpl').checked = false;
   tf = {s: src ? (src.start||'') : '', e: src ? (src.end||'') : ''};
   $('fAll').checked = !!(src && !src.start);
@@ -463,13 +565,14 @@ $('shCancel').onclick = closeEditor; $('mask').onclick = closeEditor;
 $('tpls').addEventListener('click', e=>{
   const b = e.target.closest('button'); if(!b) return;
   const t = db.templates.find(x=>x.id===b.dataset.id); if(!t) return;
-  $('fTitle').value = t.title; $('fMemo').value = t.memo||'';
+  $('fTitle').value = t.title; $('fMemo').value = t.memo||''; $('fPlace').value = t.place||'';
   tf = {s:t.start||'', e:t.end||''}; $('fAll').checked = !t.start; color = t.color||COLORS[0];
   setFocus('s'); renderColors(); $('err').textContent='';
 });
 
 function renderColors(){
-  $('colors').innerHTML = COLORS.map(c=>`<button data-c="${c}" class="${c===color?'on':''}" style="background:${c}"></button>`).join('');
+  const list = COLORS.includes(color) ? COLORS : COLORS.concat(color);
+  $('colors').innerHTML = list.map(c=>`<button data-c="${c}" class="${c===color?'on':''}" style="background:${c}"></button>`).join('');
 }
 $('colors').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; color=b.dataset.c; renderColors(); });
 
@@ -477,19 +580,20 @@ $('colors').addEventListener('click', e=>{ const b=e.target.closest('button'); i
 function setFocus(f){ focusField=f; fresh=true; document.activeElement && document.activeElement.blur(); renderTimes(); }
 function renderTimes(){
   const all = $('fAll').checked;
-  $('timesRow').style.opacity = all ? .35 : 1; $('pad').style.opacity = all ? .35 : 1;
+  $('timesRow').classList.toggle('off', all); $('pad').classList.toggle('off', all);
   const show = v => v ? `${v.padStart(4,'0').slice(0,2)}:${v.padStart(4,'0').slice(2)}` : '<span class="ph">--:--</span>';
   $('tS').innerHTML = show(tf.s); $('tE').innerHTML = show(tf.e);
   $('tbS').classList.toggle('focus', focusField==='s' && !all);
   $('tbE').classList.toggle('focus', focusField==='e' && !all);
 }
-$('tbS').onclick = ()=>{ $('fAll').checked=false; setFocus('s'); };
-$('tbE').onclick = ()=>{ $('fAll').checked=false; setFocus('e'); };
+$('tbS').onclick = ()=>{ if(!$('fAll').checked) setFocus('s'); };
+$('tbE').onclick = ()=>{ if(!$('fAll').checked) setFocus('e'); };
 $('fAll').onchange = ()=>{ $('err').textContent=''; renderTimes(); };
-['fTitle','fMemo','fName'].forEach(id=> $(id).addEventListener('input', ()=>{ $('err').textContent=''; }));
+['fTitle','fMemo','fName','fPlace','fD1','fD2'].forEach(id=> $(id).addEventListener('input', ()=>{ $('err').textContent=''; }));
+$('fD1').addEventListener('change', ()=>{ if(!$('fD2').value || $('fD2').value < $('fD1').value) $('fD2').value = $('fD1').value; });
 $('pad').addEventListener('click', e=>{
   const b = e.target.closest('button'); if(!b) return;
-  if($('fAll').checked){ $('fAll').checked=false; }
+  if($('fAll').checked) return; // 終日オンの間は時間入力できない
   $('err').textContent = ''; // 編集中はエラーを出さない
   const k = b.dataset.k; let v = tf[focusField];
   if(!k){ // 数字
@@ -524,16 +628,21 @@ function normTime(v){
 $('shSave').onclick = ()=>{
   const title = $('fTitle').value.trim();
   const memo = $('fMemo').value.trim();
+  const place = $('fPlace').value.trim();
   const all = $('fAll').checked;
+  const range = ed.kind==='event' && ed.dates.length===1;
+  const d1 = range ? $('fD1').value : '', d2 = range ? ($('fD2').value || d1) : '';
   let s = {ok:true,t:''}, e = {ok:true,t:''};
   if(!all){ s = normTime(tf.s); e = normTime(tf.e); }
   if(!title) return showErr('内容を入力してください');
+  if(range && !d1) return showErr('開始日を入力してください');
+  if(range && d2 < d1) return showErr('終了日が開始日より前になっています');
   if(!s.ok) return showErr('開始時刻が正しくありません');
   if(!e.ok) return showErr('終了時刻が正しくありません');
   if(!all && !s.t) return showErr('開始時刻を入力するか「終日」にしてください');
   if(e.t && !s.t) return showErr('開始時刻を入力してください');
-  if(s.t && e.t && e.t < s.t) return showErr('終了時刻が開始時刻より前になっています');
-  const data = {title, memo, start:s.t, end:e.t, color};
+  if(s.t && e.t && e.t < s.t && (!range || d1===d2)) return showErr('終了時刻が開始時刻より前になっています');
+  const data = {title, place, memo, start:s.t, end:e.t, color};
 
   if(ed.kind==='tpl'){
     const name = $('fName').value.trim() || title;
@@ -541,13 +650,18 @@ $('shSave').onclick = ()=>{
     else db.templates.push(Object.assign({id:uid(), name}, data));
     save(); closeEditor(); renderTpl(); toast('テンプレートを保存しました'); return;
   }
+  if(range){ data.date = d1; data.endDate = d2 > d1 ? d2 : ''; }
   if(ed.mode==='edit'){
     Object.assign(db.events.find(x=>x.id===ed.id), data);
+  }else if(range){
+    db.events.push(Object.assign({id:uid(), group:''}, data));
+    if($('fSaveTpl').checked) db.templates.push({id:uid(), name:title, title, place, memo, start:s.t, end:e.t, color});
   }else{
     const gid = ed.dates.length>1 ? uid() : '';
-    ed.dates.forEach(d=> db.events.push(Object.assign({id:uid(), date:d, group:gid}, data)));
+    ed.dates.forEach(d=> db.events.push(Object.assign({id:uid(), date:d, endDate:'', group:gid}, data)));
     if($('fSaveTpl').checked) db.templates.push(Object.assign({id:uid(), name:title}, data));
   }
+  if(range) selected = d1;
   save(); closeEditor();
   if(ed.mode==='new' && ed.dates.length>1){ toast(ed.dates.length+'日に登録しました'); mset.clear(); }
   else toast('保存しました');
@@ -608,7 +722,7 @@ $('importFile').onchange = e=>{
       const d = JSON.parse(r.result);
       if(!Array.isArray(d.events) || !Array.isArray(d.templates)) throw new Error('形式が違います');
       if(!confirm(`予定 ${d.events.length}件・テンプレート ${d.templates.length}件 で上書きします。よろしいですか？`)) return;
-      db = d; save(); render(); renderStat(); toast('復元しました');
+      migrate(d); db = d; save(); render(); renderStat(); toast('復元しました');
     }catch(err){ alert('読み込めませんでした：'+err.message); }
     e.target.value='';
   };
@@ -616,7 +730,115 @@ $('importFile').onchange = e=>{
 };
 $('wipeBtn').onclick = ()=>{
   if(!confirm('すべての予定とテンプレートを削除します。元に戻せません。よろしいですか？')) return;
-  db = {events:[], templates:[]}; save(); render(); renderStat(); toast('削除しました');
+  db = {events:[], templates:[], ver:2}; save(); render(); renderStat(); toast('削除しました');
+};
+
+/* ========== カレンダー(.ics)取り込み ========== */
+function fgColor(hex){
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex||''); if(!m) return '#fff';
+  const n = parseInt(m[1],16), r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+  return (0.299*r + 0.587*g + 0.114*b) > 170 ? '#1c1c1e' : '#fff';
+}
+function icsUnescape(v){ return v.replace(/\\n/gi,'\n').replace(/\\([,;\\])/g,'$1'); }
+function icsDate(prop){
+  // 戻り値 {date:'YYYY-MM-DD', time:'HHMM' or '', allday:boolean}
+  if(!prop) return null;
+  const v = prop.value.trim();
+  const allday = /VALUE=DATE(?!-)/i.test(prop.params) || /^\d{8}$/.test(v);
+  if(allday) return {date: v.slice(0,4)+'-'+v.slice(4,6)+'-'+v.slice(6,8), time:'', allday:true};
+  const m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})?(Z?)$/.exec(v); if(!m) return null;
+  let d;
+  if(m[7]==='Z') d = new Date(Date.UTC(+m[1], m[2]-1, +m[3], +m[4], +m[5]));
+  else d = new Date(+m[1], m[2]-1, +m[3], +m[4], +m[5]);
+  return {date: ymd(d), time: pad2(d.getHours())+pad2(d.getMinutes()), allday:false};
+}
+function parseICS(text){
+  text = text.replace(/\r\n?/g,'\n').replace(/\n[ \t]/g,'');
+  const calName = icsUnescape(((/^X-WR-CALNAME:(.*)$/m.exec(text))||[])[1]||'');
+  const calColor = ((/^X-APPLE-CALENDAR-COLOR:(#[0-9a-f]{6})/im.exec(text))||[])[1]||'';
+  const evs = []; let cur = null, nest = 0;
+  for(const line of text.split('\n')){
+    if(line==='BEGIN:VEVENT'){ cur = {}; nest = 0; continue; }
+    if(!cur) continue;
+    if(line==='END:VEVENT'){ evs.push(cur); cur = null; continue; }
+    if(line.startsWith('BEGIN:')){ nest++; continue; }   // VALARM など
+    if(line.startsWith('END:')){ nest--; continue; }
+    if(nest>0) continue;
+    const i = line.indexOf(':'); if(i<0) continue;
+    const head = line.slice(0,i), value = line.slice(i+1);
+    const [name, ...ps] = head.split(';');
+    cur[name.toUpperCase()] = {params: ps.join(';'), value};
+  }
+  return {calName, calColor, evs};
+}
+function icsToItems(ev, calColor, calName, stat){
+  const s = icsDate(ev.DTSTART); if(!s) { stat.bad++; return []; }
+  let e = icsDate(ev.DTEND);
+  const title = icsUnescape(ev.SUMMARY ? ev.SUMMARY.value : '').trim() || '(無題)';
+  const place = ev.LOCATION ? icsUnescape(ev.LOCATION.value).trim() : '';
+  const memoParts = [];
+  if(ev.DESCRIPTION && ev.DESCRIPTION.value.trim()) memoParts.push(icsUnescape(ev.DESCRIPTION.value).trim());
+  if(ev.URL && ev.URL.value.trim()) memoParts.push(ev.URL.value.trim());
+  if(ev.RRULE) stat.rrule++;
+  const color = (ev.COLOR && /^#[0-9a-f]{6}$/i.test(ev.COLOR.value) ? ev.COLOR.value : '') || calColor || COLORS[0];
+  const src = (ev.UID ? ev.UID.value : '') + '|' + s.date + s.time;
+  const item = {id:uid(), group:'', title, place, memo: memoParts.join('\n'), color, src,
+    cal: (ev['X-CALNAME'] ? icsUnescape(ev['X-CALNAME'].value) : calName), date:s.date, endDate:'', start:'', end:''};
+  if(s.allday){
+    const last = e && e.date > s.date ? addDays(e.date,-1) : s.date;
+    if(last > s.date) item.endDate = last;
+  }else{
+    if(!e || e.date < s.date || (e.date===s.date && e.time < s.time)) e = {date:s.date, time:s.time};
+    item.start = s.time;
+    if(e.date===s.date){ item.end = e.time===s.time ? '' : e.time; }
+    else if(e.time==='0000'){ // 翌日0:00終了 → 前日の24:00終了として扱う
+      const prev = addDays(e.date,-1);
+      if(prev > s.date) item.endDate = prev;
+      item.end = '2400';
+    }else{ item.endDate = e.date; item.end = e.time; }
+  }
+  return [item];
+}
+
+let icsPending = null;
+$('icsBtn').onclick = ()=> $('icsFile').click();
+$('icsFile').onchange = async e=>{
+  const files = [...e.target.files]; e.target.value=''; if(!files.length) return;
+  const stat = {bad:0, rrule:0}; const cals = []; let all = [];
+  for(const f of files){
+    let text; try{ text = await f.text(); }catch(err){ continue; }
+    if(!/BEGIN:VCALENDAR/.test(text)){ alert(f.name+' はカレンダーファイルではないようです'); continue; }
+    const p = parseICS(text);
+    p.evs.forEach(ev=> all.push(...icsToItems(ev, p.calColor, p.calName, stat)));
+    if(p.calName) cals.push(p.calName);
+  }
+  const have = new Set(db.events.filter(x=>x.src).map(x=>x.src));
+  const fresh = all.filter(x=>!have.has(x.src));
+  const dup = all.length - fresh.length;
+  const future = fresh.filter(x=>evEnd(x)>=today);
+  icsPending = {all: fresh, future};
+  const calSet = [...new Set(all.map(x=>x.cal).filter(Boolean))];
+  $('icsPanel').style.display='';
+  $('icsPanel').innerHTML = `
+    <div class="list" style="padding:12px;font-size:14px;line-height:1.7">
+      ${calSet.length?`カレンダー：${calSet.map(esc).join('、')}<br>`:''}
+      取り込める予定：<b>${fresh.length}件</b>（うち今日以降 ${future.length}件）
+      ${dup?`<br><span style="color:var(--sub)">取り込み済みの ${dup}件 は除外しました</span>`:''}
+      ${stat.rrule?`<br><span style="color:var(--danger)">繰り返し予定 ${stat.rrule}件 は初回分のみ取り込みます</span>`:''}
+      ${stat.bad?`<br><span style="color:var(--danger)">読めなかった予定 ${stat.bad}件</span>`:''}
+    </div>
+    <div style="height:10px"></div>
+    ${fresh.length?`<button class="btn primary" id="icsAll">すべて取り込む（${fresh.length}件）</button>
+    <button class="btn" id="icsFuture">今日以降だけ取り込む（${future.length}件）</button>`:''}
+    <button class="btn" id="icsCancel">やめる</button>`;
+  const done = list=>{
+    list.forEach(x=>{ delete x.cal; db.events.push(x); });
+    save(); render(); renderStat(); $('icsPanel').style.display='none'; icsPending=null;
+    toast(list.length+'件 取り込みました');
+  };
+  if($('icsAll')) $('icsAll').onclick = ()=> done(icsPending.all);
+  if($('icsFuture')) $('icsFuture').onclick = ()=> done(icsPending.future);
+  $('icsCancel').onclick = ()=>{ $('icsPanel').style.display='none'; icsPending=null; };
 };
 
 /* ========== その他 ========== */
