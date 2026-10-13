@@ -147,9 +147,13 @@ input.date{width:100%;font-size:16px;padding:9px 10px;border-radius:10px;border:
 .pad button{height:46px;border-radius:10px;background:var(--key);font-size:22px;box-shadow:0 1px 0 rgba(0,0,0,.2)}
 .pad button:active{background:var(--keyp)}
 .pad button.fn{font-size:14px;background:var(--line)}
-.colors{display:flex;gap:10px;padding:4px}
-.colors button{width:30px;height:30px;border-radius:50%;border:3px solid transparent}
-.colors button.on{border-color:var(--text)}
+.colors .grp{font-size:11px;color:var(--sub);margin:6px 4px 4px}
+.colors .row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px 4px;padding:0 2px}
+.colors button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:2px 0;min-width:0}
+.colors button i{width:32px;height:32px;border-radius:50%;border:3px solid transparent;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);
+  display:flex;align-items:center;justify-content:center;font-style:normal;font-size:14px;font-weight:700}
+.colors button.on i{border-color:var(--text)}
+.colors button span{font-size:10px;color:var(--sub);max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .chk{display:flex;align-items:center;gap:8px;font-size:14px;padding:10px 4px}
 .chk input{width:20px;height:20px}
 .err{color:var(--danger);font-size:13px;min-height:18px;margin:6px 4px 0}
@@ -286,7 +290,12 @@ input.date{width:100%;font-size:16px;padding:9px 10px;border-radius:10px;border:
 'use strict';
 /* ========== データ ========== */
 const KEY = 'schedule-app.v1';
-const COLORS = ['#0a84ff','#34c759','#ff9500','#ff3b30','#af52de','#ff2d55','#5ac8fa','#8e8e93'];
+// Ucカレンダーで使っていた色（カレンダー名つき）
+const UC_COLORS = [
+  ['#ffa3d1','私用'],['#ff2968','観劇'],['#2979ff','舞台稽古'],['#ff9500','カレイドスコープ'],
+  ['#cc73e1','絵'],['#ffcc00','マモ'],['#5bffe7','病院'],['#63da38','脱出ゲーム'],
+  ['#000066','会社'],['#9eceff','鴎友'],['#388e3c','研究室'],['#607d8b','無門塾']];
+const COLORS = UC_COLORS.map(x=>x[0]); // 先頭（私用）が新規予定の初期色
 let db = load();
 function load(){
   try{
@@ -571,8 +580,12 @@ $('tpls').addEventListener('click', e=>{
 });
 
 function renderColors(){
-  const list = COLORS.includes(color) ? COLORS : COLORS.concat(color);
-  $('colors').innerHTML = list.map(c=>`<button data-c="${c}" class="${c===color?'on':''}" style="background:${c}"></button>`).join('');
+  const lc = (color||'').toLowerCase();
+  const sw = (c,n)=>`<button data-c="${c}" class="${c.toLowerCase()===lc?'on':''}"><i style="background:${c};color:${fgColor(c)}">${c.toLowerCase()===lc?'✓':''}</i>${n?`<span>${esc(n)}</span>`:''}</button>`;
+  const known = COLORS.map(c=>c.toLowerCase());
+  let h = `<div class="row">${UC_COLORS.map(([c,n])=>sw(c,n)).join('')}</div>`;
+  if(color && !known.includes(lc)) h += `<div class="grp">この予定の今の色</div><div class="row">${sw(color,'現在の色')}</div>`;
+  $('colors').innerHTML = h;
 }
 $('colors').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; color=b.dataset.c; renderColors(); });
 
