@@ -281,7 +281,8 @@ input.date{width:100%;font-size:16px;padding:9px 10px;border-radius:10px;border:
     <textarea class="txt" id="fMemo" placeholder="任意"></textarea>
     <label class="chk" id="rowSaveTpl"><input type="checkbox" id="fSaveTpl">この内容をテンプレートとしても保存</label>
     <div class="err" id="err"></div>
-    <button class="btn danger" id="shDelete" style="margin-top:6px">削除</button>
+    <button class="btn" id="shDup" style="margin-top:6px">複製（この内容で新しい予定を作る）</button>
+    <button class="btn danger" id="shDelete">削除</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -548,10 +549,12 @@ function openEditor(o){
   $('rowName').style.display = ed.kind==='tpl' ? '' : 'none';
   $('rowSaveTpl').style.display = ed.kind==='event' && ed.mode==='new' ? '' : 'none';
   $('shDelete').style.display = ed.mode==='edit' ? '' : 'none';
+  $('shDup').style.display = ed.kind==='event' && ed.mode==='edit' ? '' : 'none';
   const range = ed.kind==='event' && ed.dates.length===1;
   $('rowRange').style.display = range ? '' : 'none';
   $('rowDates').style.display = ed.kind==='event' && !range ? '' : 'none';
   if(range){ $('fD1').value = ed.dates[0]; $('fD2').value = src ? evEnd(src) : ed.dates[0]; }
+  prevD1 = $('fD1').value;
   if(ed.kind==='event'){
     $('datesLbl').textContent = ed.dates.length>1 ? `日付（${ed.dates.length}日にまとめて登録）` : '日付';
     $('dates').innerHTML = ed.dates.map(d=>`<span class="chip">${fmtDate(d)}</span>`).join('');
@@ -603,7 +606,16 @@ $('tbS').onclick = ()=>{ if(!$('fAll').checked) setFocus('s'); };
 $('tbE').onclick = ()=>{ if(!$('fAll').checked) setFocus('e'); };
 $('fAll').onchange = ()=>{ $('err').textContent=''; renderTimes(); };
 ['fTitle','fMemo','fName','fPlace','fD1','fD2'].forEach(id=> $(id).addEventListener('input', ()=>{ $('err').textContent=''; }));
-$('fD1').addEventListener('change', ()=>{ if(!$('fD2').value || $('fD2').value < $('fD1').value) $('fD2').value = $('fD1').value; });
+let prevD1 = '';
+$('fD1').addEventListener('change', ()=>{
+  const d1 = $('fD1').value, d2 = $('fD2').value;
+  // 複製した予定は、開始日を変えると終了日も同じ日数だけずらす（期間の長さを保つ）
+  if(ed && ed.dup && d1 && prevD1 && d2 && d2 >= prevD1){
+    const days = dayDiff(prevD1, d2);
+    $('fD2').value = addDays(d1, days);
+  }else if(!d2 || d2 < d1) $('fD2').value = d1;
+  if(d1) prevD1 = d1;
+});
 $('pad').addEventListener('click', e=>{
   const b = e.target.closest('button'); if(!b) return;
   if($('fAll').checked) return; // 終日オンの間は時間入力できない
@@ -655,6 +667,7 @@ $('shSave').onclick = ()=>{
   if(!all && !s.t) return showErr('開始時刻を入力するか「終日」にしてください');
   if(e.t && !s.t) return showErr('開始時刻を入力してください');
   if(s.t && e.t && e.t < s.t && (!range || d1===d2)) return showErr('終了時刻が開始時刻より前になっています');
+  if(s.t && e.t && e.t === s.t && (!range || d1===d2)) return showErr('開始時刻と終了時刻が同じです');
   const data = {title, place, memo, start:s.t, end:e.t, color};
 
   if(ed.kind==='tpl'){
@@ -681,6 +694,21 @@ $('shSave').onclick = ()=>{
   render();
 };
 function showErr(m){ $('err').textContent = m; }
+
+/* --- 複製：画面に入っている内容のまま、新しい予定の登録画面に切り替える（元の予定は変えない） --- */
+$('shDup').onclick = ()=>{
+  if(ed.kind!=='event' || ed.mode!=='edit') return;
+  ed = {kind:'event', mode:'new', dup:true, dates:[$('fD1').value || ed.dates[0]]};
+  $('shTitle').textContent = '予定を追加（複製）';
+  $('shDelete').style.display = 'none';
+  $('shDup').style.display = 'none';
+  $('rowSaveTpl').style.display = '';
+  $('fSaveTpl').checked = false;
+  $('err').textContent = '';
+  prevD1 = $('fD1').value;
+  document.querySelector('#sheet .sh-body').scrollTop = 0;
+  toast('複製しました。日付などを変えて保存してください');
+};
 
 $('shDelete').onclick = ()=>{
   if(ed.kind==='tpl'){
