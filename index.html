@@ -103,6 +103,21 @@ button{font:inherit;color:inherit;border:none;background:none;padding:0;cursor:p
 .btn.primary{background:var(--accent);color:#fff;font-weight:600}
 .btn.danger{color:var(--danger)}
 
+/* 使い方（折りたたみ） */
+.help{background:var(--card);border-radius:14px;overflow:hidden;margin-bottom:24px}
+.help details{border-bottom:1px solid var(--line)}
+.help details:last-child{border-bottom:none}
+.help summary{list-style:none;padding:13px 14px;font-size:15px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.help summary::-webkit-details-marker{display:none}
+.help summary::after{content:'›';color:var(--sub);font-size:20px;line-height:1;transition:transform .2s}
+.help details[open] summary::after{transform:rotate(90deg)}
+.help .hb{padding:0 14px 14px;font-size:14px;line-height:1.7;-webkit-user-select:text;user-select:text}
+.help .hb ul,.help .hb ol{margin:0;padding-left:1.3em}
+.help .hb li{margin-bottom:4px}
+.help .hb b{font-weight:600}
+.page h2.sub{font-size:15px;color:var(--sub);font-weight:600;margin:4px 8px 8px}
+.ver{text-align:center;font-size:13px;color:var(--sub);margin:24px 0 8px}
+
 /* sheet */
 .mask{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:10;display:none}
 .mask.show{display:block}
@@ -204,6 +219,64 @@ input.date{width:100%;font-size:16px;padding:9px 10px;border-radius:10px;border:
   <section class="view" id="v-set">
     <div class="page">
       <h1>設定・バックアップ</h1>
+      <h2 class="sub">使い方</h2>
+      <div class="help">
+        <details><summary>カレンダーの見かた</summary><div class="hb"><ul>
+          <li>月曜始まりの月間カレンダーです。土曜は青、日曜・祝日は赤で、祝日名も出ます。</li>
+          <li>左右にスワイプするか、「‹」「›」で月を移動します。「今日」で今月に戻ります。</li>
+          <li>日付をタップすると、その日が選ばれ、カレンダーの下にその日の予定が一覧で出ます（タップしただけでは入力画面は開きません）。</li>
+          <li>何日にもまたがる予定は、日をまたぐ帯で表示されます。1日に入りきらない分は「+2」のように数で出ます。</li>
+        </ul></div></details>
+        <details><summary>予定を追加する</summary><div class="hb"><ol>
+          <li>カレンダーで日付をタップして選びます。</li>
+          <li>右下の「＋」を押します。</li>
+          <li>開始日・終了日、内容、場所、時間、色、メモを入れます。終了日を開始日より後にすると、何日にもまたがる予定になります。</li>
+          <li>右上の「保存」を押します。</li>
+        </ol>
+        入力にまちがいがあると、「保存」を押したときに赤い字で知らせます。</div></details>
+        <details><summary>時間の入れ方（テンキー）</summary><div class="hb"><ul>
+          <li>「開始」か「終了」の枠をタップしてから、画面のテンキーで入れます。</li>
+          <li>例：「930」→ 9:30、「1800」→ 18:00、「9」と「:30」→ 9:30。</li>
+          <li>「+1時間」で、開始の1時間後を終了に入れます。「開始⇄終了」で入力する枠を切りかえ、「⌫」で1文字消し、「クリア」で枠を空にします。</li>
+          <li>時間のない予定は「終日」をオンにします。オンの間はテンキーが使えません。</li>
+          <li>終了は空でもかまいません。同じ日の予定で、終了が開始より前や、開始と同じ時刻のときは保存できません。</li>
+        </ul></div></details>
+        <details><summary>同じ予定を何日かにまとめて登録する</summary><div class="hb"><ol>
+          <li>カレンダーの上の「複数日」を押します。</li>
+          <li>登録したい日付を順にタップします（もう一度タップで解除）。曜日の見出しをタップすると、その月の同じ曜日をまとめて選べます。</li>
+          <li>「＋」を押して内容を入れ、「保存」を押すと、選んだ日それぞれに同じ予定が入ります。</li>
+          <li>終わったら「1日」に戻します。</li>
+        </ol></div></details>
+        <details><summary>予定を直す・消す</summary><div class="hb"><ul>
+          <li>カレンダーの下の一覧で予定をタップすると、編集画面が開きます。直して「保存」を押します。</li>
+          <li>消すときは、編集画面のいちばん下の「削除」を押します。</li>
+          <li>「複数日」でまとめて登録した予定は、「まとめて全部削除」か「この日だけ削除」を選べます。</li>
+        </ul></div></details>
+        <details><summary>予定を複製する</summary><div class="hb"><ol>
+          <li>もとにしたい予定を一覧でタップして、編集画面を開きます。</li>
+          <li>下の「複製（この内容で新しい予定を作る）」を押します。同じ内容の新しい予定の画面になります。</li>
+          <li>日付などを変えて「保存」を押します。開始日を変えると、終了日も同じだけずれます。</li>
+        </ol>
+        もとの予定はそのまま残ります。</div></details>
+        <details><summary>テンプレートを使う</summary><div class="hb"><ul>
+          <li>よく使う予定（内容・場所・時間・色・メモ）を登録しておけます。</li>
+          <li>下の「テンプレート」タブの「＋ テンプレートを追加」で作ります。予定の入力画面で「この内容をテンプレートとしても保存」にチェックしても作れます。</li>
+          <li>予定の入力画面の上のほうに並ぶテンプレートをタップすると、内容がまとめて入ります。</li>
+        </ul></div></details>
+        <details><summary>バックアップと復元</summary><div class="hb"><ul>
+          <li>「バックアップを書き出す」を押すと共有の画面が開くので、「"ファイル"に保存」を選びます。</li>
+          <li>「バックアップから復元」で保存したファイルを選ぶと、その時点の内容に戻ります。<b>今のデータはすべて置きかわる</b>ので注意してください。</li>
+          <li>「カレンダー(.ics)から取り込む」で、ほかのカレンダーアプリの予定を取り込めます。同じファイルを何回取り込んでも、予定は重なりません。</li>
+        </ul></div></details>
+        <details><summary>データについての注意</summary><div class="hb"><ul>
+          <li>予定はこのiPhoneの中（このアプリ）にだけ保存されます。インターネットには送られません。</li>
+          <li><b>ホーム画面のアイコンを削除すると、データも消えます。</b></li>
+          <li>Safariで同じページを開いても、ホーム画面のアプリのデータは見えません（保存場所が別です）。</li>
+          <li>機種変更やもしもの時のために、ときどき「バックアップを書き出す」で保存してください。</li>
+        </ul></div></details>
+      </div>
+
+      <h2 class="sub">データ</h2>
       <p class="note">データはこのiPhone内（このアプリ）にだけ保存されます。機種変更や万一に備えて、ときどきバックアップを書き出してください。</p>
       <button class="btn" id="exportBtn">バックアップを書き出す（JSON）</button>
       <button class="btn" id="importBtn">バックアップから復元</button>
@@ -216,6 +289,7 @@ input.date{width:100%;font-size:16px;padding:9px 10px;border-radius:10px;border:
       <div style="height:20px"></div>
       <button class="btn danger" id="wipeBtn">すべてのデータを削除</button>
       <p class="note" id="stat"></p>
+      <p class="ver" id="appVer"></p>
     </div>
   </section>
 
@@ -289,6 +363,8 @@ input.date{width:100%;font-size:16px;padding:9px 10px;border-radius:10px;border:
 
 <script>
 'use strict';
+// アプリのバージョン（設定ページに表示）。更新のたびに sw.js の VERSION と同じ値に変えること
+const APP_VERSION = 'v9';
 /* ========== データ ========== */
 const KEY = 'schedule-app.v1';
 // Ucカレンダーで使っていた色（カレンダー名つき）
@@ -886,6 +962,7 @@ $('icsFile').onchange = async e=>{
 let tt;
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),1800); }
 
+$('appVer').textContent = 'バージョン ' + APP_VERSION;
 if('serviceWorker' in navigator){ window.addEventListener('load', ()=> navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
 
